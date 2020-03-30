@@ -197,8 +197,99 @@
     > - 默认情况下，shell脚本会以脚本中的最后一个命令的退出状态码退出；
     > - "exit"命令允许你在脚本结束时指定一个退出状态码，"exit"命令的参数可以是变量，但其值要在0~255范围；
 
+## 1.2. 使用结构化命令
+
+> &emsp;&emsp;程序要求对shell脚本中的命令施加一些逻辑流程控制,有一类命令会根据条件使脚本跳过某些命令。这样的命令通常称为结构化命令(structured command)。
+
+### 1.2.1. if-then和if-then-else
+
+- 几种格式：
+
+    ```
+    if command
+    then
+        commands
+    fi
+    ```
+    ```
+    if command; then
+        commands
+    fi
+    ```
+    ```
+    if command
+    then
+        commands
+    else
+        commands
+    fi
+    ```
+    ```
+    if command
+    then
+        commands
+    elif
+    then
+        if command
+        then
+            commands
+        fi
+    elif
+    then
+        commands
+    fi
+    ```
+
+- **注意**
+> - bash shell的if语句会运行if后面的那个命令，如果该命令的退出状态码是0(该命令成功运行)，位于then部分的命令就会被执行；
+> - then语句或else语句后可一次执行多条命令；
+> - 可以使用嵌套的"if-then"语句；
+> - 同一个级的"elif"语句过多的时候可以考虑使用"case"命令；
 
 
 # 疑问：
 - shell内建命令有哪些？
 - 运行命令的时候不加入路径就不会创建子shell？
+
+```
+file=/dir1/dir2/dir3/my.file.txt
+可以用${ }分别替换得到不同的值：
+${file#*/}：删掉第一个 / 及其左边的字符串：dir1/dir2/dir3/my.file.txt
+${file##*/}：删掉最后一个 /  及其左边的字符串：my.file.txt
+${file#*.}：删掉第一个 .  及其左边的字符串：file.txt
+${file##*.}：删掉最后一个 .  及其左边的字符串：txt
+${file%/*}：删掉最后一个  /  及其右边的字符串：/dir1/dir2/dir3
+${file%%/*}：删掉第一个 /  及其右边的字符串：(空值)
+${file%.*}：删掉最后一个  .  及其右边的字符串：/dir1/dir2/dir3/my.file
+${file%%.*}：删掉第一个  .   及其右边的字符串：/dir1/dir2/dir3/my
+记忆的方法为：
+# 是 去掉左边（键盘上#在 $ 的左边）
+%是去掉右边（键盘上% 在$ 的右边）
+单一符号是最小匹配；两个符号是最大匹配
+${file:0:5}：提取最左边的 5 个字节：/dir1
+${file:5:5}：提取第 5 个字节右边的连续5个字节：/dir2
+也可以对变量值里的字符串作替换：
+${file/dir/path}：将第一个dir 替换为path：/path1/dir2/dir3/my.file.txt
+
+${file//dir/path}：将全部dir 替换为 path：/path1/path2/path3/my.file.txt
+```
+
+```
+()和{}都是对一串的命令进行执行,但有所区别：
+相同点：
+()和{}都是把一串的命令放在括号里面,并且命令之间用;号隔开
+不同点
+()只是对一串命令重新开一个子shell进行执行,{}对一串命令在当前shell执行
+()最后一个命令可以不用分号,{}最后一个命令要用分号
+()里的第一个命令和左边括号不必有空格,{}的第一个命令和左括号之间必须要有一个空格
+()和{}中括号里面的某个命令的重定向只影响该命令,但括号外的重定向则影响到括号里的所有命令
+```
+
+```
+* 表示零个或多个任意字符
+?表示零个或一个任意字符
+[...]表示匹配中括号里面的字符
+[!...]表示不匹配中括号里面的字符
+
+https://blog.csdn.net/wmjcode/article/details/80662501
+```
