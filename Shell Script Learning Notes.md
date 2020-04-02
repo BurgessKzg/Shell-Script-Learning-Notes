@@ -346,6 +346,107 @@
 - 每次“for”命令遍历值列表，它都会将列表中的下个值赋给变量
 - 最后一次迭代后变量的值会在shell脚本的剩余部分一直保持有效,之后可以修改并使用；
 
+#### 1.3.1.2. 读取列表中的复杂值
+
+-  使用转义字符"\"(反斜线)来将单引号转义
+- 使用双引号来定义用到单引号的值
+-  for 循环假定每个值都是用空格分割的,在单独的数据值中有空格，就必须用双引号将这些值圈起来
+
+#### 1.3.1.3. 从变量读取列表
+
+- 将一系列值都集中存储在了一个变量中，然后需要遍历变量中的整个列表
+- 向变量中存储的已有文本字符串尾部添加文本的一个常用方法  
+- <font color=red>哪些情况下使用双引号？</font>
+    ```
+    #!/bin/sh
+    # expole
+
+    var="aaa bbb wejf lkfjj lksjk kjsdf sd"
+    var=$var" lllkjkdj"
+
+    for sta in $var
+    do 
+        echo "ccurent sta: $sta!"
+    done
+    ```
+
+#### 1.3.1.4. 从命令读取值
+
+- 列表中所需值可以是命令的输出，用**命令替换**来执行任何能产生输出的命令，然后在 for 命令中使用该命令的输出；
+- 一行中的空格和回车换行都看作空格处理；
+
+```
+#!/bin/sh
+# test
+
+#list=$(cat state)
+
+#for var in $list
+for var in $(cat state)
+do
+        echo "var:$var"
+done
+
+结果：
+# cat state 
+A B C
+D
+E
+F
+# . ./test.sh 
+var:A
+var:B
+var:C
+var:D
+var:E
+var:F
+# 
+```
+
+#### 1.3.1.5. 更改字段分隔符
+
+- 环境变量IFS(内部字段分隔符)定义了shell用作字段分隔符的一系列字符；
+- 默认IFS包括：空格、制表符、换行符
+- <font color=red>为什么IFS=$'\n'要使用$符号</font>，"IFS='\n'"会将\和n作为换行符
+```
+#!/bin/sh
+# test
+
+file="state"
+
+IFS=$'\n'
+
+for var in $(cat file)
+do
+        echo "var:$var"
+done
+
+结果：
+# . ./test.sh 
+var:A B C
+var:D
+var:E
+var:F
+# 
+```
+
+- 保留旧值方便统一脚本中再次使用
+```
+IFS.OLD=$IFS
+IFS=$'\n'
+# ...
+IFS=$IFS.OLD
+#...
+```
+- 可以使用"IFS=:"来解析/etc/passwd文件；
+
+#### 1.3.1.6. 用通配符读取目录
+
+-  for 命令可以自动遍历目录中的文件，进行此操作时，必须在文件名或路径名中使用通配符，它会强制shell使用文件扩展匹配
+- 文件扩展匹配是生成匹配指定通配符的文件名或路径名的过程
+- 在Linux中，目录名和文件名中包含空格当然是合法的，所以建议加双引号`if [ -d "$file" ]`
+- 可以在 for 命令中列出多个目录通配符，将目录查找和列表合并进同一个 for 语句`for file in /home/rich/.b* /home/rich/badtest`
+
 
 
 
