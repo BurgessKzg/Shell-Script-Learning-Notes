@@ -3,6 +3,8 @@
 
 > &emsp;&emsp;将多个shell命令放入文件中作为程序执行,这些文件被称作shell脚本。
 
+[TOC]
+
 # 1. shell编程脚本基础
 
 ## 1.1. 构建基本脚本
@@ -447,11 +449,143 @@ IFS=$IFS.OLD
 - 在Linux中，目录名和文件名中包含空格当然是合法的，所以建议加双引号`if [ -d "$file" ]`
 - 可以在 for 命令中列出多个目录通配符，将目录查找和列表合并进同一个 for 语句`for file in /home/rich/.b* /home/rich/badtest`
 
+### 1.3.2. C语言风格的for命令
 
+#### 1.3.2.1. C语言的for命令
 
+- **格式**
+    ```
+    for (( variable assignment ; condition ; iteration process ))
 
+    for (( a = 1; a < 10; a++ ))
+    ```
 
+- **注意**
+    - 变量赋值可以有空格；
+    - 条件中的变量不以美元符开头；
+    - 迭代过程的算式未用 expr 命令格式。
 
+#### 1.3.2.2. 使用多个变量
+
+- **注意**
+    - 尽管可以使用多个变量，但只能在"for"循环中定义一种条件;
+
+### 1.3.3. while命令
+
+#### 1.3.3.1. 基本格式
+
+```
+    while test command
+    do
+        other commands
+    done
+```
+
+- **注意**
+    - 每次迭代的一开始测试"test"命令,返回**非零**退出状态码时，"while"命令会**停止**执行那组命令；
+    - "test command"可以使用任何普通的bash shell命令，或者用"test"命令进行条件测试；
+    - 最常见的"test command"的用法是用方括号来检查循环命令中用到的shell变量的值；
+
+#### 1.3.3.2. 使用多个测试命令
+
+- **注意**
+    - "while"命令允许你在"while"语句行定义多个测试命令,只有最后一个测试命令的退出状态码会被用来决定什么时候结束循环；
+    - 每个测试命令都出现在单独的一行上；
+        ```
+            $ cat test11
+            #!/bin/bash
+            # testing a multicommand while loop
+
+            var1=10
+
+            while echo $var1
+                [ $var1 -ge 0 ]
+            do
+                echo "This is inside the loop"
+                var1=$[ $var1 - 1 ]
+            done
+        ```
+
+### 1.3.4. until命令
+
+- **格式**
+    ```
+    until test commands
+    do
+        other commands
+    done
+    ```
+
+- **注意**
+    - "until"命令和"while"命令工作方式**相反**，"until"命令要求你指定一个通常返回非零退出状态码的测试命令；
+    - 可以在"until"命令语句中放入多个测试命令，只有最后一个命令的退出状态码决定是否执行循环体； 
+
+### 1.3.5. 循环嵌套
+
+- 循环语句可以在循环内使用任意类型的命令，包括其他循环命令；
+
+### 1.3.6. 循环处理文件数据
+
+- **注意**
+    - 使用嵌套循环；
+    - 修改IFS环境变量(测试示例表面该环境变量的作用域在循环体内，退出后为原先值！)
+
+- **示例**
+    ```
+        #!/bin/bash
+        # changing the IFS value
+       
+        IFS.OLD=$IFS
+
+        IFS=$'\n'       
+        for entry in $(cat /etc/passwd)
+        do
+            echo "Values in $entry –"
+
+            IFS=:            
+            for value in $entry
+            do
+                echo " $value"
+            done
+        done
+    ```
+
+### 1.3.7. 控制循环
+
+#### 1.3.7.1. break命令
+
+- **注意**
+    - 可以用"break"命令来退出任意类型的循环，包括"while"、"until"和"for"循环；
+    - `break n`可以跳出多层循环，默认是1；
+
+#### 1.3.7.2. continue命令
+
+- **注意**
+    - "continue"命令可以提前中止某次循环中的命令，但并不会完全终止整个循环；
+    - 可以在"while"、"until"和"for"循环中使用；
+    - `continue n`也可以使用；
+
+### 1.3.8. 处理循环的输出
+
+- 可以通过在"done"命令同行之后添加一个处理命令来实现重定向或管道；
+
+    ```
+        for file in /home/burgesskzg/*
+        do
+            if [ -d "$file" ]
+            then
+                echo "$file is a directory"
+            elif
+                echo "$file is a file"
+            fi
+        done > output.txt
+    ```
+    ```
+        for state in "North Dakota" Connecticut Illinois Alabama Tennessee
+        do
+            echo "$state is the next place to go"
+        done | sort
+    ```
 
 
 
@@ -508,6 +642,8 @@ ${file//dir/path}：将全部dir 替换为 path：/path1/path2/path3/my.file.txt
 ?表示零个或一个任意字符
 [...]表示匹配中括号里面的字符
 [!...]表示不匹配中括号里面的字符
+
+shell脚本中read命令使用技巧(-r选项)
 
 https://blog.csdn.net/wmjcode/article/details/80662501
 ```
