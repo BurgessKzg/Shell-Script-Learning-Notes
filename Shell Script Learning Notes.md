@@ -602,9 +602,20 @@ IFS=$IFS.OLD
 - 以"."或"source"运行脚本，命令会和脚本名混在一起出现在"\$0"参数中！
 - 以完整的脚本路径运行脚本时，"\$0"会包括整个路径和脚本！
 - "basename"命令会返回不包含路径的脚本名；
+    ```shell
+        name=$(basename $0)
+        echo
+        echo The script name is: $name
+        #
+        $ bash /home/Christine/test5b.sh
+        The script name is: test5b.sh
+        $
+        $ ./test5b.sh
+        The script name is: test5b.sh
+    ```
 
 - 如果脚本中使用参数，但是执行是没有使用参数或缺少参数会导致出错；
-- 在使用参数前一定要检查其中是否存在数据；
+- 在使用参数前一定要检查其中是否存在数据(`if [ -n "$1" ]`)；
 
 ### 1.4.2. 特殊参数变量
 
@@ -677,10 +688,160 @@ IFS=$IFS.OLD
     - 知道何时停止处理选项，并将参数留给用户自己处理，利用`shift $[ $OPTIND - 1 ]`可移动获取参数；
     - 推荐使用方式：`while getopts :ab:c opt`；
 
-## 1.4.5. 将选项标准化
+### 1.4.5. 将选项标准化
 
+> &emsp;&emsp;有些字母选项在Linux世界里已经拥有了某种程度的标准含义,建议在脚本中用相同含义实现选项。
 
+|选项|描述|
+|:---:|:---|
+|-a|显示所有对象|
+|-c|生成一个计数|
+|-d|指定一个目录|
+|-e|扩展一个对象|
+|-f|指定读入数据的文件|
+|-h|显示命令的帮助信息|
+|-i|忽略文本大小写|
+|-l|产生输出的长格式版本|
+|-n|使用非交互模式(批处理)|
+|-o|将所有输出重定向到的指定的输出文件|
+|-q||
+|-r|递归地处理目录和文件|
+|-s|以安静模式运行|
+|-v|生成详细输出|
+|-x|排除某个对象|
+|-y|对所有问题回答yes|
 
+### 1.4.6. 获取用户输入
+
+> &emsp;&emsp;命令行选项和参数是从脚本用户处获得输入的一种重要方式，而在脚本运行时想要和用户交互，可以使用"read"命令。
+
+#### 1.4.6.1. 基本读取
+
+- "read"命令从标准输入(键盘)或另一个文件描述符中接收输入；
+- 收到输入后"read"命令会将数据放进一个变量；
+    ```shell
+        echo -n "Enter your name: "
+        read name
+        echo "Hello $name, welcome to my program. "
+    ```
+    - "echo"命令的"-n"选项在字符串结尾不输出换行；
+
+- "read"命令包含"-p"选项，允许直接在"read"命令行指定提示符；
+    ```shell
+        read -p "Please enter your age: " age
+        days=$[ $age * 365 ]
+        echo "That makes you over $days days old! "
+    ```
+
+- "read"命令会将提示符后输入的所有数据分配给单个变量，如果变量数量不够，剩下的数据就全部分配给最后一个变量
+    ```shell
+        read -p "Enter your name: " first last
+        echo "Checking data for $last, $first…"
+        $
+        $ ./test.sh
+        Enter your name: Rich Blum
+        Checking data for Blum, Rich...
+    ```
+
+- "read"命令行如果不指定变量，会将它收到的任何数据都放进特殊环境变量"REPLY"中；
+    ```shell
+        read -p "Enter your name: "
+        echo
+        echo Hello $REPLY, welcome to my program.
+        #
+        $
+        $ ./test24.sh
+        Enter your name: Christine
+        Hello Christine, welcome to my program.
+    ```
+
+#### 1.4.6.2. 超时
+
+- "-t"选项可以指定"read"命令等待输入的秒数；
+- 当计时器过期还未输入数据，"read"命令会返回一个非零退出状态码(可以使用如"if-then"或"while"判断)；
+    ```shell
+        if read -t 5 -p "Please enter your name: " name
+        then
+            echo "Hello $name, welcome to my script"
+        else
+            echo
+            echo "Sorry, too slow! "
+        fi
+    ```
+    - "if"命令判断指令的退出码为0时为真！
+
+- "-n"选项让"read"命令统计输入的字符数,当输入的字符达到预设的字符数时自动退出，将输入的数据赋给变量(无需按回车键)；
+    ```shell
+        read -n1 -p "Do you want to continue [Y/N]? " answer
+        
+        case $answer in
+        Y | y)  echo
+                echo "fine, continue on…";;
+
+        N | n)  echo
+                echo OK, goodbye
+                exit;;
+        esac
+        echo "This is the end of the script"
+    ```
+
+#### 1.4.6.3. 隐藏方式读取
+
+> &emsp;&emsp;敏感数据需要在输入回显时隐藏，如密码等。
+
+- "-s"选项可以避免"read"命令中输入的数据出现在显示器上(实际上，数据会被显示，只是"read"命令会将文本颜色设成跟背景色一样)；
+    ```shell
+        read -s -p "Enter your password: " pass
+        echo
+        echo "Is your password really $pass? "
+        $
+        $ ./test.sh
+        Enter your password:
+        Is your password really T3st1ng?
+        $
+    ```
+    - 输入提示符输入的数据不会出现在屏幕上，但会赋给变量，以便在脚本中使用。
+
+#### 1.4.6.4. 从文件中读取
+
+- "read"命令可以读取Linux系统上文件里保存的数据；
+- 每次读取一行；
+- 当文件中再没有内容时，"read"命令会退出并返回非零退出状态码；
+    ```shell
+        #!/bin/bash
+
+        count=1
+        cat test | while read line
+        do
+            echo "Line $count: $line"
+            count=$[ $count + 1]
+        done
+        echo "Finished processing the file"
+        $
+        $ cat test
+        The quick brown dog jumps over the lazy fox.
+        This is a test, this is only a test.
+        O Romeo, Romeo! Wherefore art thou Romeo?
+        $
+        $ ./test.sh
+        Line 1: The quick brown dog jumps over the lazy fox.
+        Line 2: This is a test, this is only a test.
+        Line 3: O Romeo, Romeo! Wherefore art thou Romeo?
+        Finished processing the file
+        $
+    ```
+    - "read"命令不能直接读出文件中的内容，需要借助"cat"命令；
+
+## 1.5. 呈现数据
+
+> &emsp;&emsp;目前介绍的脚本都是通过将数据打印在屏幕上或将数据重定向到文件中来显示信息，接下来介绍如何将脚本的输出重定向到Linux系统的不同位置。
+
+### 1.5.1. 理解输入和输出
+
+> &emsp;&emsp;已知显示脚本输出方法："在显示器上显示输出"或者"将输出重定向到文件中"；
+> &emsp;&emsp;这两种方法要么将数据输出全部显示，要么什么都不显示。有时需要将一部分数据在显示器上显示，另一部分数据保存到文件中，针对这种需求，需要了解Linux如何处理输入输出，如何用标准的Linux输入和输出系统来将脚本输出导向特定位置。
+
+#### 1.5.1.1. 标准文件描述符
 
 
 
