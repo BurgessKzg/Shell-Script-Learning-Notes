@@ -1411,12 +1411,72 @@ IFS=$IFS.OLD
 
 ### 2.1.4. 数组变量和函数
 
+---
+
+**向函数传递数组参数**
+- `${array[*]}`：访问整个数组的元素；
+- 方法一：
+    ```SHELL
+        function add {
+            local newarray
+            #newarray=$@
+            #newarray=($(echo "$@"))
+            #newarray=$(echo "$@")
+            newarray=$(echo $@)
+        }
+
+        array=(1 2 3)
+
+        add ${array[*]}
+    ```
+- 方法二：
+    ```SHELL
+        function add {
+            local newarray
+            #newarray=$@
+            newarray=($(echo "$@"))
+        }
+
+        array=(1 2 3)
+        arg=$(echo ${array[*]})
+
+        add $arg
+    ```
+
+---
+
+**从函数返回数组**
+- 函数用"echo"语句来按正确顺序输出单个数组值，然后脚本再将它们重新放进一个新的数组变量中；
 
 ### 2.1.5. 函数递归
 
+- 局部函数变量的一个特性是自成体系，函数可以调用自己来得到结果(递归调用)；
+- 通常递归函数都有一个最终可以迭代到的基准值；
+- 阶乘递归：
+    ```SHELL
+        function factorial {
+            if [ $1 -eq 1 ]
+            then
+                echo 1
+            else
+                local temp=$[ $1 - 1 ]
+                local result='factorial $temp'
+                echo $[ $result * $1 ]
+            fi
+        }
+
+        read -p "Enter value: " value
+        result=$(factorial $value)
+        echo "The factorial of $value is: $result"
+    ```
 
 ### 2.1.6. 创建库
 
+- bash shell允许创建函数库文件，然后在多个脚本中引用该库文件;
+- 步骤：
+    - 1.创建一个包含脚本中所需函数的公用库文件；
+    - 2.在用到这些函数的脚本文件中包含刚创建的公用库文件；
+    - 3.
 
 ### 2.1.7. 在命令行上使用函数
 
