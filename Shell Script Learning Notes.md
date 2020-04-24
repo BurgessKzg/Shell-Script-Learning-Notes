@@ -1476,12 +1476,71 @@ IFS=$IFS.OLD
 - 步骤：
     - 1.创建一个包含脚本中所需函数的公用库文件；
     - 2.在用到这些函数的脚本文件中包含刚创建的公用库文件；
-    - 3.
+    - 3.然后调用
+- 需要注意，需要在脚本中用`source 库路径名`或`. 库路径名`来引用库，否则由于调用库时会创建子shell，导致作用域不同无法调用；
 
 ### 2.1.7. 在命令行上使用函数
 
+> &emsp;&emsp;<font color=red>一旦在shell中定义了函数，就可以在整个系统中使用它，无需关心脚本是不是在PATH环境变量里。</font>
+
+---
+
+**在命令行上创建函数**
+
+- 单行方式(在每个命令后面加个分号)
+    ```SHELL
+        $ function doubleit { read -p "Enter value: " value; echo $[ $value * 2 ]; }
+        $
+        $ doubleit
+        Enter value: 20
+        40
+    ```
+- 多行方式(定义时,shell会用"次提示符"提示输入更多命令)
+- 不用在每条命令的末尾放一个分号，只要按下回车键;
+- 在函数尾部使用花括号通知shell函数定义结束；
+- 在命令行上创建函数时，函数名不可与内建命令或其他命令相同，否则，函数将会覆盖原来的命令；
+    ```SHELL
+        $ function multem {
+        > echo $[ $1 * $2 ]
+        > }
+        $ multem 2 5
+        10
+    ```
+
+---
+
+**在.bashrc文件中定义函数**
+- 在命令行上直接定义函数，shell退出，函数消失，可将函数定义到".bashrc"文件中；
+- 不管时交互式shell，还是现有shell中启动新shell，新shell都会查找主目录下的".bashrc"文件；
+- 可以在".bashrc"文件的末尾直接定义函数；
+- 可在".bashrc"文件中通过"source 库路径名"(source可以点代替)将库文件中的函数添加到该文件中，便可在shell命令行使用这些函数了，shell还会将定义好的函数传给子shell进程；
 
 ### 2.1.8. 实例
+
+- 下载：
+    ```
+        // 从地址ftp://ftp.gnu.org/gnu/shtool/shtool-2.0.8.tar.gz下载包
+
+        // 解压 tar -zxvf shtool-2.0.8.tar.gz
+    ```
+- 构建库
+    ```
+        // ./configure (检查构建shtool库文件所必需的软件,使用工具路径修改配置文件)
+
+        // make (构建shtool库文件)
+
+        // make tess （测试库文件）
+    ```
+- shtool库使用格式
+    `shtool [options] [function [options] [args]]`
+- 使用
+    ```SHELL
+        $ cat test.sh
+        #!/bin/bash
+        shtool platform
+        $ ./test16
+        Ubuntu 14.04 (iX86)
+    ```
 
 
 
