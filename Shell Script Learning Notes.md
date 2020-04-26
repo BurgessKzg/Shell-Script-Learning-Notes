@@ -1542,6 +1542,175 @@ IFS=$IFS.OLD
         Ubuntu 14.04 (iX86)
     ```
 
+## 2.2. 图形化桌面环境中的脚本编程
+
+### 2.2.1. 创建文本菜单
+
+---
+
+**创建菜单布局**
+- 1.先清空显示器，"clear"命令用当前终端会话的terminfo数据清理出现在屏幕上的文本；
+- 2.用"echo"命令来显示菜单元素，"-e"选项可以使"echo"命令显示**非**可打印字符，"-n"选项可以去掉行尾的换行符；
+- 3.通过"read"命令获取用户输入，"-n"选项可以限定读取几个字符(这种情况下字符够了，不用按回车键)；
+    ```SHELL
+        #! /bin/sh
+
+        clear
+        echo
+        echo -e "\t\t\tSys Admiin Menu\n"
+        echo -e "\t1. AAA"
+        echo -e "\t2. BBB"
+        echo -e "\t3. CCC"
+        echo -en "Enter option: "
+        read -n 1 option
+
+        case $option in
+            1)
+                echo -e "\nAAA";;
+            2)
+                echo -e "\nBBB";;
+            3)
+                echo -e "\nCCC";;
+            *)
+                echo -e "\nerror";;
+        esac
+    ```
+
+---
+
+**创建菜单函数**
+- 菜单选项作为一组独立的函数，可以方便在任何时候调用；
+- 将菜单布局本身作为一个函数来创建；
+- 为每个菜单选项创建独立的shell函数
+- 为还没有实现的函数创建一个桩函数(stub function)，桩函数是一个空函数，或者只有一个 "echo"语句；
+- 桩函数也是从"clear"命令开始，避免受到原菜单干扰；
+    ```SHELL
+        function menu {
+                clear
+                echo
+                echo -e "\t\t\tSys Admiin Menu\n"
+                echo -e "\t1. AAA"
+                echo -e "\t2. BBB"
+                echo -e "\t3. CCC"
+                echo -en "Enter option: "
+                read -n 1 option
+        }
+    ```
+
+---
+
+**添加菜单逻辑**
+- "case"命令应根据菜单中输入的字符来调用相应的函数；
+- "*"处理所有不正确的菜单项；
+
+---
+
+**整合shell脚本菜单**
+```SHELL
+    #! /bin/sh                               
+                                            
+    function menu {                          
+            clear                            
+            echo                             
+            echo -e "\t\t\tSys Admiin Menu\n"
+            echo -e "\t1. AAA"       
+            echo -e "\t2. BBB"       
+            echo -e "\t3. CCC"       
+            echo -en "Enter option: "
+            read -n 1 option
+    }                      
+                        
+    AAA() {                
+            clear          
+            echo -e "\nAAA"
+    }                      
+                        
+    BBB() {                
+            clear          
+            echo -e "\nBBB"
+    }                      
+                        
+    CCC() {                
+            clear          
+            echo -e "\nCCC"
+    }
+    while [ 1 ]            
+    do                     
+        menu               
+        case $option in    
+            q)             
+                break;;    
+            1)             
+                AAA;;      
+            2)             
+                BBB;;      
+            3)         
+                CCC;;  
+            *)         
+                clear  
+                echo -e "\nerror option!";;
+        esac                               
+        echo -en "\n\n\t\t\t Hit any key to continue"
+        read -n 1 line                               
+    done                                             
+    clear 
+```
+
+--- 
+
+**使用select命令**
+- 可以避免花太多时间在建立菜单布局和获取用户输入上；
+- 格式:
+    ```SHELL
+        select variable in list
+        do
+            commands
+        done
+    ```
+    - "list"参数是由空格分隔的文本选项列表，这些列表构成了整个菜单；
+    - "select"命令会将每个列表项显示成一个带编号的选项；
+    - "select"命令为选项显示一个由"PS3"环境变量定义的特殊提示符；
+    - 存储在变量中的结果值是整个文本字符串而不是跟菜单选项相关联的数字，文本字符串值才是要在"case"语句中进行比较的内容；
+    ```SHELL
+        #!/bin/bash
+
+        AAA() {
+            clear
+            echo -e "\nAAA"
+        }
+
+        BBB() {
+            clear
+            echo -e "\nBBB"
+        }
+
+        CCC() {
+            clear
+            echo -e "\nCCC"
+        }
+
+        PS3="Enter option:"
+        select option in "exit" "AAA" "BBB" "CCC"
+        do
+            case $option in
+                exit)
+                    break;;
+                AAA)
+                    AAA;;
+                BBB)
+                    BBB;;
+                CCC)
+                    CCC;;
+                *)
+                    clear
+                    echo -e "\nerror option!";;
+            esac
+        done
+        clear
+    ```
+
+### 2.2.2. 制作窗口
+
 
 
 
@@ -1558,6 +1727,7 @@ IFS=$IFS.OLD
 # 疑问：
 - shell内建命令有哪些？
 - 运行命令的时候不加入路径就不会创建子shell？
+- select方法和getopt的区别？应用场景？(getopt用于命令行参数，select的用于交互)
 
 ```
 file=/dir1/dir2/dir3/my.file.txt
