@@ -1737,8 +1737,28 @@ IFS=$IFS.OLD
 -  如果有"Cancel"或"No"按钮，检查"dialog"命令的退出状态码；
 -  重定向"TDERR"来获得输出值；
 
+### 2.2.3. 使用图形
 
+> &emsp;&emsp;KDE和GNOME桌面环境都扩展了"dialog"命令的思路，包含可以在各自环境下生成"X Window"图形化部件的命令:
+> - kdialog包：为KDE桌面提供图形化窗口部件；
+> - gdialog包和zenity包：为GNOME桌面提供图形化窗口部件；
 
+#### 2.2.3.1. KDE环境
+
+- "KDE"图形化环境默认包含"kdialog"包；
+- "kdialog"包使用"kdialog"命令在"KDE"桌面上生成类似于"dialog"式部件的标准窗口
+- "kdialog"命令使用命令行选项来指定具体使用哪种类型的窗口部件
+- 格式：`kdialog display-options window-options arguments`，"window-options"选项允许指定使用哪种类型的窗口部件
+- "kdialog"就会将标号值发到"STDOUT"上
+
+#### 2.2.3.2. GNOME环境
+
+- "GNOME"图形化环境支持两种流行的可生成标准窗口的包："gdialog"包和"zenity"包；
+- "zenity"是大多数"GNOME"桌面Linux发行版上最常见的包
+- "zenity"允许用命令行选项创建不同的窗口部件
+- "zenity"命令行程序与"kdialog"和"dialog"程序的工作方式有些不同，许多部件类型都用另外的命令行选项定义，而不是作为某个选项的参数
+- "zenity"命令会将值返回到"STDOUT"中
+- "zenity"并不支持菜单对话窗口，可用单选列表窗口来作为主菜单；
 
 
 
@@ -1755,7 +1775,7 @@ IFS=$IFS.OLD
 - shell内建命令有哪些？
 - 运行命令的时候不加入路径就不会创建子shell？
 - select方法和getopt的区别？应用场景？(getopt用于命令行参数，select的用于交互)
-
+- "X Window"图形化部件？
 ```
 file=/dir1/dir2/dir3/my.file.txt
 可以用${ }分别替换得到不同的值：
